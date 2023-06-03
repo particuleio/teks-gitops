@@ -20,7 +20,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m0s
-  path: ./gitops/clusters/production/demo
+  path: ./gitops/clusters/production/pio-teks-production-demo
   prune: true
   sourceRef:
     kind: GitRepository
