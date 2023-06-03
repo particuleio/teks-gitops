@@ -1,0 +1,9 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kyverno
+  labels:
+    name: kyverno
+    vault: mainnet
+    kustomize.toolkit.fluxcd.io/prune: disabled

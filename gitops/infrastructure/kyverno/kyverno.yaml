@@ -1,0 +1,67 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: kyverno
+  namespace: kyverno
+spec:
+  chart:
+    spec:
+      chart: kyverno
+      interval: 1m
+      sourceRef:
+        kind: HelmRepository
+        name: kyverno
+        namespace: flux-system
+      version: v3.0.0
+  interval: 5m
+  maxHistory: 2
+  values:
+    resources:
+      limits:
+        memory: 600Mi
+      requests:
+        cpu: 150m
+        memory: 256Mi
+    image:
+      tag: v1.10.0
+    replicaCount: 3
+    serviceMonitor:
+      enabled: true
+    generatecontrollerExtraResources:
+      - alerts
+# Usefull in testing policies
+#    extraArgs:
+#    - "backgroundScan=2m"
+
+---
+# We need calico here to select control-plane
+apiVersion: projectcalico.org/v3
+kind: NetworkPolicy
+metadata:
+  name: kyverno-allow-control-plane
+  namespace: kyverno
+spec:
+  selector: all()
+  order: 2000
+  ingress:
+    - action: Allow
+      source:
+        services:
+          name: kubernetes
+          namespace: default
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kyverno-allow-telemetry
+  namespace: kyverno
+spec:
+  podSelector: {}
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: telemetry
+  policyTypes:
+  - Ingress

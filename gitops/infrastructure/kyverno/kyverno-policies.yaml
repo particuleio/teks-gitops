@@ -1,0 +1,58 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: kyverno-policies
+  namespace: kyverno
+spec:
+  chart:
+    spec:
+      chart: kyverno-policies
+      interval: 1m
+      sourceRef:
+        kind: HelmRepository
+        name: kyverno
+        namespace: flux-system
+      version: v3.0.0
+  interval: 5m
+  maxHistory: 2
+  values:
+    background: false
+    validationFailureAction: audit
+    policyExclude:
+      disallow-host-namespaces:
+        any:
+        - resources: &calico
+            kinds:
+            - Pod
+            namespaces:
+            - calico-system
+            - tigera-operator
+            - tigera
+      disallow-host-path:
+        any:
+        - resources: *calico
+        - resources: &node-problem-detector
+            kinds:
+            - Pod
+            namespaces:
+            - node-problem-detector
+        - resources: &promtail
+            kinds:
+            - Pod
+            namespaces:
+            - telemetry
+            names:
+            - "promtail*"
+      disallow-privileged-containers:
+        any:
+        - resources: *calico
+        - resources: *node-problem-detector
+        - resources:
+            kinds:
+              - Pod
+            namespaces:
+              - actions-runner-controller
+      disallow-host-ports:
+        any:
+        - resources: *calico
